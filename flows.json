@@ -1,0 +1,4463 @@
+[
+    {
+        "id": "ab1d59a9d4c4b31a",
+        "type": "tab",
+        "label": "Реструктуризация",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "2235540731034ba4",
+        "type": "inject",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "Первый вызов",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "1",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 95,
+        "y": 160,
+        "wires": [
+            [
+                "a904c08ec369d26e"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "4f9817025a635965",
+        "type": "postgrestor",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "restructuring",
+        "query": "{{{msg.payload}}}",
+        "postgresDB": "bacd51cd.6dea1",
+        "output": true,
+        "outputs": 1,
+        "errors": true,
+        "outField": "",
+        "x": 570,
+        "y": 220,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "a904c08ec369d26e",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "Создание таблицы при старте приложения",
+        "func": "msg.payload = `\nCREATE TABLE IF NOT EXISTS restructuring (\n    id SERIAL PRIMARY KEY,\n    client_id varchar NOT NULL,\n    ref varchar NOT NULL,\n    status varchar,\n    evt varchar(6),\n    call_ref varchar,\n    message text,\n    create_time varchar NOT NULL,\n    change_time varchar NOT NULL\n)`;\n\nreturn msg;\n\n/*\nНа вход конвейера приходит реестр договоров:\n - ID клиента\n - тип договора (текущий)\n - референс договора\n - FIID договора\n \n \n \n RefContr\n ContractT = UN20|PU20   UG20|PG20   UU20  err\n \n \n if (/UN20|PU20/.test(msg.ContractT)) {\n    msg.contractTypeNEW = \"\"; \n } else if (/UG20|PG20/.test(msg.ContractT)) {\n    msg.contractTypeNEW = \"\"; \n } else if (/UU20/.test(msg.ContractT)) {\n    msg.contractTypeNEW = \"\"; \n } else {\n     throw new Error({\n         text: \"Error in msg.ContractT\"\n     });\n }\n \n*/",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 160,
+        "wires": [
+            [
+                "4f9817025a635965"
+            ]
+        ]
+    },
+    {
+        "id": "159f8c5d60cb6572",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "Чистка OK старше 30 дней",
+        "func": "let date = new Date();\n\ndate.setDate(date.getDate()-30);\n\nmsg.payload = `DELETE FROM restructuring WHERE create_time<'${date.getTime()}' AND status=\"OK\"`;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 260,
+        "y": 200,
+        "wires": [
+            [
+                "4f9817025a635965"
+            ]
+        ]
+    },
+    {
+        "id": "137d1f7fa951e83b",
+        "type": "inject",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "00 01 * * *",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 95,
+        "y": 200,
+        "wires": [
+            [
+                "159f8c5d60cb6572"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "0b01cd9ff5b7c568",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "Удалить все старше 60 дней",
+        "func": "let date = new Date();\n\ndate.setDate(date.getDate() - 60);\n\nmsg.payload = `DELETE FROM restructuring WHERE create_time<'${date.getTime()}'`;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 270,
+        "y": 240,
+        "wires": [
+            [
+                "4f9817025a635965"
+            ]
+        ]
+    },
+    {
+        "id": "d45a494a7ea19eaa",
+        "type": "inject",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "00 12 * * *",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 95,
+        "y": 240,
+        "wires": [
+            [
+                "0b01cd9ff5b7c568"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "45b8be95737bdcd3",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "flow params",
+        "func": "",
+        "outputs": 0,
+        "noerr": 0,
+        "initialize": "// Добавленный здесь код будет исполняться\n// однократно при развертывании узла.\n\nif (global.get(\"NODE_ENV\") == \"development\") {\n    flow.set([\n        \"startPb\",\n        \"cardsforwave\",\n        \"saw121212\",\n        \"sup\"\n    ], [\n        \"https://test-start.privatbank.ua\",\n        \"https://stat-vbo.test.it.loc\",\n        \"https://start-vbo.test.it.loc\",\n        \"https://inform-sup.test.it.loc\"\n    ]);\n} else {\n    flow.set([\n        \"startPb\",\n        \"cardsforwave\",\n        \"saw121212\",\n        \"sup\"\n    ], [\n        \"https://start.privatbank.ua\",\n        \"https://stat.privatbank.ua\",\n        \"https://start.privatbank.ua\",\n        \"https://inform-sup.pb.ua\"\n    ]);\n}\n\n\n\n",
+        "finalize": "",
+        "libs": [],
+        "x": 150,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "fd2641ec677245fa",
+        "type": "catch",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "scope": null,
+        "uncaught": false,
+        "x": 390,
+        "y": 60,
+        "wires": [
+            [
+                "789a9f37e987c4a4",
+                "8e5c96fa958e54ce",
+                "f0d333ba60d42a2b"
+            ]
+        ]
+    },
+    {
+        "id": "789a9f37e987c4a4",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "context.global.error(msg, \"500 IN RESTR\", node);",
+        "outputs": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "8e5c96fa958e54ce",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.alert = `RESTR: 500 ERROR in ${global.get(\"nr_id\")} ${global.get(\"NODE_ENV\")}: ${JSON.stringify(msg.error)}`;\n\nif (global.get(\"NODE_ENV\") != \"development\") return msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 80,
+        "wires": [
+            [
+                "2983b53e89f6b887"
+            ]
+        ]
+    },
+    {
+        "id": "2983b53e89f6b887",
+        "type": "link out",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "links": [
+            "72d6fb09.53d7b4"
+        ],
+        "x": 655,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "9c2b4ccb67139285",
+        "type": "pbhttp in",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "url": "/softCollectionRestr",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "checkRole": false,
+        "checkEsa": true,
+        "accessErrors": true,
+        "async": false,
+        "subsys": "",
+        "role": "",
+        "sid": "headers.sid",
+        "typesubsys": "str",
+        "typerole": "str",
+        "globalAccess": "",
+        "globalAccessType": "flow",
+        "logins-manually": false,
+        "logins-activate": false,
+        "esaConfig": "",
+        "authorizationMethod": "sid-validation",
+        "validateReq": false,
+        "params": [],
+        "manuallyLogins": [],
+        "x": 190,
+        "y": 620,
+        "wires": [
+            [
+                "ec8b85998843eda3"
+            ]
+        ]
+    },
+    {
+        "id": "665cb1e9067978b5",
+        "type": "comment",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "Приемник заявок Soft Сollectіon",
+        "info": "",
+        "x": 210,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "ec8b85998843eda3",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "context.global.log(msg, \"NEW RESTR ITEM\", node);\n\nmsg.item = msg.payload;\nmsg.LOG = \"Приняли заявку СофтКоллект\";\nnode.status({ fill: \"green\", shape: \"dot\", text: `${moment().format('YYYY-MM-DD HH:mm:ss')}` });\n\n\nmsg.payload = `SELECT * FROM restructuring\n                WHERE ref='${msg.item.ref}'`;\n/*\n    INSERT INTO restructuring (\n        client_id, \n        ref,\n        status,\n        evt,\n        call_ref\n        createTime)\n    VALUES\n        ('${msg.item.client_id}',\n        '${msg.item.ref}',\n        'NEW',\n        '',\n        ''\n        '${new Date().getTime()}')\n`;\n*/\n\nreturn msg;\n\n//if (global.get(\"NODE_ENV\") != \"development\") return msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 380,
+        "y": 620,
+        "wires": [
+            [
+                "0b28b6f73f284b7d"
+            ]
+        ]
+    },
+    {
+        "id": "f6ee421ec79c3b96",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.payload = `\n    INSERT INTO restructuring (\n        client_id, \n        ref,\n        status,\n        evt,\n        call_ref,\n        message,\n        create_time,\n        change_time)\n    VALUES\n        ('${msg.item.client_id}',\n        '${msg.item.ref}',\n        'NEW',\n        '',\n        '',\n        '',\n        '${new Date().getTime()}',\n        '${new Date().getTime()}')\n`;\n\nreturn msg;\n\n/*\nCREATE TABLE IF NOT EXISTS restructuring (\n    id SERIAL PRIMARY KEY,\n    client_id varchar NOT NULL,\n    ref varchar UNIQUE NOT NULL,\n    status varchar,\n    evt varchar(6),\n    call_ref varchar,\n    createTime varchar NOT NULL\n)\n*/",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 840,
+        "y": 500,
+        "wires": [
+            [
+                "da7314b387ca5e1c"
+            ]
+        ]
+    },
+    {
+        "id": "f460e022f25647aa",
+        "type": "comment",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "Записали в БД",
+        "info": "",
+        "x": 860,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "3182cbc5b01e6a01",
+        "type": "link in",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "links": [
+            "da7314b387ca5e1c",
+            "2b967fe2728034ae",
+            "94932cf65116997e",
+            "68140765122d0c33",
+            "cfa991854b29cc9f",
+            "7f7c98a1fdce4b08",
+            "673b5c5c2cc040d3",
+            "9498eaf5f413943d",
+            "7d9b362e4b2753b0",
+            "aa8dca34e23db39b",
+            "06af8fc411b5d910",
+            "20c81a522ce1c5db",
+            "66ec3bee04798d06",
+            "336a3461093b98c1"
+        ],
+        "x": 465,
+        "y": 260,
+        "wires": [
+            [
+                "4f9817025a635965"
+            ]
+        ]
+    },
+    {
+        "id": "da7314b387ca5e1c",
+        "type": "link out",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "mode": "link",
+        "links": [
+            "3182cbc5b01e6a01"
+        ],
+        "x": 955,
+        "y": 500,
+        "wires": []
+    },
+    {
+        "id": "0b28b6f73f284b7d",
+        "type": "postgrestor",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "restructuring",
+        "query": "{{{msg.payload}}}",
+        "postgresDB": "bacd51cd.6dea1",
+        "output": true,
+        "outputs": 1,
+        "errors": true,
+        "outField": "",
+        "x": 530,
+        "y": 620,
+        "wires": [
+            [
+                "99546aa97811a04b"
+            ]
+        ]
+    },
+    {
+        "id": "99546aa97811a04b",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "//проверка заявки в работе с таким же рефом\nmsg.cash = msg.payload.rows;\n\nlet inProc = false;\n\nmsg.cash.forEach(function(item){\n    if (item.status == \"NEW\") {\n        inProc = true;\n        msg.inProc = item;\n    }\n});\n\nif (inProc) {\n    msg.LOG = ` - Дубль заявки ${msg.cash[0].ref}`;\n    msg.payload = {\n        status: \"DOUBLE\",\n        msgid: msg._msgid,\n        message: `Відхилено: Знайдено дублюючу заявку ${msg.inProc.ref} від ${moment(+msg.inProc.create_time).format(\"YYYY-MM-DD hh:mm:ss\")}`\n    };\n\n    return [null, msg];\n}\n\nmsg.payload = {\n    status: \"OK\",\n    msgid: msg._msgid,\n    message: \"Заявку прийнято\"\n};\n\nreturn [msg, null];",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 680,
+        "y": 620,
+        "wires": [
+            [
+                "f6ee421ec79c3b96",
+                "f58695ca1fd285fc",
+                "84356fc0ee70f2df"
+            ],
+            [
+                "f58695ca1fd285fc"
+            ]
+        ]
+    },
+    {
+        "id": "5ff0f0222076a06f",
+        "type": "inject",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "props": [
+            {
+                "p": "item",
+                "v": "{\"client_id\":\"12243729\",\"ref\":\"SAMDN51000117488949\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 160,
+        "y": 1220,
+        "wires": [
+            [
+                "d377227eb888e5d1"
+            ]
+        ]
+    },
+    {
+        "id": "d377227eb888e5d1",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.payload = `\n    INSERT INTO restructuring (\n        client_id, \n        ref,\n        status,\n        evt,\n        call_ref\n        createTime)\n    VALUES\n        ('${msg.item.client_id}',\n        '${msg.item.ref}',\n        'NEW',\n        '',\n        ''\n        '${new Date().getTime()}')\n`;\n\nreturn msg;\n\n/*\nCREATE TABLE IF NOT EXISTS restructuring (\n    id SERIAL PRIMARY KEY,\n    client_id varchar NOT NULL,\n    ref varchar UNIQUE NOT NULL,\n    status varchar,\n    evt varchar(6),\n    call_ref varchar,\n    createTime varchar NOT NULL\n)\n*/",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 1220,
+        "wires": [
+            [
+                "2b967fe2728034ae"
+            ]
+        ]
+    },
+    {
+        "id": "2b967fe2728034ae",
+        "type": "link out",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "mode": "link",
+        "links": [
+            "3182cbc5b01e6a01"
+        ],
+        "x": 395,
+        "y": 1220,
+        "wires": []
+    },
+    {
+        "id": "e2f26649671557dd",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "context.global.log(msg, \"NEW RESTR ITEM\", node);\n\nmsg.payload = `SELECT * FROM restructuring\n                WHERE ref='${msg.item.ref}'`;\n/*\n    INSERT INTO restructuring (\n        client_id, \n        ref,\n        status,\n        evt,\n        call_ref,\n        message,\n        create_time,\n        change_time)\n    VALUES\n        ('${msg.item.client_id}',\n        '${msg.item.ref}',\n        'NEW',\n        '',\n        '',\n        '',\n        '${new Date().getTime()}',\n        '${new Date().getTime()}')\n`;\n*/\n\nreturn msg;\n\n//if (global.get(\"NODE_ENV\") != \"development\") return msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 1280,
+        "wires": [
+            [
+                "9bb3800596f67698"
+            ]
+        ]
+    },
+    {
+        "id": "9bb3800596f67698",
+        "type": "postgrestor",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "restructuring",
+        "query": "{{{msg.payload}}}",
+        "postgresDB": "bacd51cd.6dea1",
+        "output": true,
+        "outputs": 1,
+        "errors": true,
+        "outField": "",
+        "x": 450,
+        "y": 1280,
+        "wires": [
+            [
+                "73ddb983932b55fc"
+            ]
+        ]
+    },
+    {
+        "id": "0f1bfa0b297f8778",
+        "type": "inject",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "props": [
+            {
+                "p": "item",
+                "v": "{\"client_id\":\"12243729\",\"ref\":\"SAMDN51000117488949\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 160,
+        "y": 1280,
+        "wires": [
+            [
+                "e2f26649671557dd"
+            ]
+        ]
+    },
+    {
+        "id": "73ddb983932b55fc",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 610,
+        "y": 1280,
+        "wires": []
+    },
+    {
+        "id": "f58695ca1fd285fc",
+        "type": "pbhttp out",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 830,
+        "y": 620,
+        "wires": []
+    },
+    {
+        "id": "84356fc0ee70f2df",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "Запрос \\n рабочий стол",
+        "func": "msg.url = `${flow.get(\"startPb\")}/DesktopGUI/quarantineRestruct.cors?clid=${msg.item.client_id}`;\n\nmsg.headers = {\n    \"Content-type\": \"application/json\",\n    \"Authorization\": global.get(\"sid\")\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 860,
+        "y": 560,
+        "wires": [
+            [
+                "28b5d6b646f94c0c"
+            ]
+        ]
+    },
+    {
+        "id": "28b5d6b646f94c0c",
+        "type": "pb-http-request",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "/quarantineRestruct.cors",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": false,
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "throwNot200": false,
+        "proxy": "",
+        "authType": "",
+        "headers": "{{headers}}",
+        "payload": "{{payload}}",
+        "timeout": "",
+        "customTimeout": false,
+        "x": 1070,
+        "y": 560,
+        "wires": [
+            [
+                "415811d10f57a31c",
+                "6e3c5144ef992a0c"
+            ]
+        ]
+    },
+    {
+        "id": "415811d10f57a31c",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "Проверка результата",
+        "func": "context.global.checkRes(msg, \"quarantineRestruct 1\", node);\n\ntry {\n    msg.payload = JSON.parse(msg.payload);\n} catch (e) { }\n\nif (msg.statusCode == 200) {\n    msg.startRes = msg.payload.result;\n    msg.repeatCounter = 0;\n    return [msg, null];\n} else {\n    context.global.error(msg, `Ошибка поиска на раб столе 1`, node);\n    msg.repeatCounter = msg.repeatCounter ? msg.repeatCounter : 0;\n    if (msg.repeatCounter < 6) {\n        return [null, msg];\n    } \n    msg.message = \"Помилка перевірки довідника 1. Перевищено кількість спроб.\"\n    throw new Error(\"Превышено кол-во запросов к справочнику 1\");\n}",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1300,
+        "y": 560,
+        "wires": [
+            [
+                "8ea47549c30acf29"
+            ],
+            [
+                "4cd13903528e4ef8"
+            ]
+        ]
+    },
+    {
+        "id": "4cd13903528e4ef8",
+        "type": "pb-delay",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "30",
+        "timeoutUnits": "minutes",
+        "sendTasks": true,
+        "showStatus": false,
+        "x": 1500,
+        "y": 600,
+        "wires": [
+            [
+                "0712099890869b87"
+            ]
+        ]
+    },
+    {
+        "id": "ecc095845e89e0c9",
+        "type": "link in",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "links": [
+            "0712099890869b87"
+        ],
+        "x": 735,
+        "y": 560,
+        "wires": [
+            [
+                "84356fc0ee70f2df"
+            ]
+        ]
+    },
+    {
+        "id": "0712099890869b87",
+        "type": "link out",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "mode": "link",
+        "links": [
+            "ecc095845e89e0c9"
+        ],
+        "x": 1595,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "8ea47549c30acf29",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "Анализ статуса",
+        "func": "//переберем все заявки из ответа \n//и сверим с рефом от софтов\nmsg.isPresent = false;\n\nmsg.startRes.forEach(function(item){\n    if (item.refId == msg.item.ref) {\n        msg.isPresent = true;\n        msg.state = item.state;\n    }\n});\n\nif (msg.isPresent) {\n    if (msg.state == \"N\") {\n        return [msg, null, null];\n    } else if (msg.state == \"Y\" || msg.state == \"C\") {\n        return [null, msg, null];\n    } else if (msg.state == \"X\") {\n        return [null, null, msg];\n    }\n} else {\n    //отправить письмо Ляшко\n    msg.url = \"https://script.google.com/a/macros/privatbank.ua/s/AKfycbz0xvQhF7pViiaHNh9-5Hjm_e0ePcDuwFdmeRl3_Ir2t69egePNcIDdUhmMTQSajO0C/exec\";\n    \n    msg.payload = {\n        subject: \"Договір відсутній в довіднику\",\n        message: `По клиенту ${msg.item.client_id} не найдена информация в справочнике DESKTOP.quarantine_restr. Реф: ${msg.item.ref}`,\n        email: [\"aleksej.ljashko@privatbank.ua\"]\n    };\n\n    msg.headers = {\n        \"Authorization\": `Bearer ${flow.get(\"gasToken\")}`\n    };\n\n    return [null, null, null, msg];\n}",
+        "outputs": 4,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1520,
+        "y": 520,
+        "wires": [
+            [
+                "18feb999bca2fba3",
+                "d92b6e1bc159bd65"
+            ],
+            [
+                "1bace1acc7ba2af1",
+                "251b9340f444f938"
+            ],
+            [
+                "40b2fea2a55a6e31",
+                "3506942c1ecbc71c"
+            ],
+            [
+                "29b0cfa2f302ad92",
+                "64ed7f04d77cdc09"
+            ]
+        ]
+    },
+    {
+        "id": "18feb999bca2fba3",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1730,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "f4e2c04493aa8dd1",
+        "type": "comment",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "3. По договору вже була успішна операція Реструктуризації",
+        "info": "",
+        "x": 1880,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "4fa331cfb3ac9f97",
+        "type": "comment",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "4. По клієнту вже була пропозиція, очікуємо від клієнта підписання додаткової угоди",
+        "info": "",
+        "x": 1960,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "b9bb08e5cfd5dcb5",
+        "type": "comment",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "5. Договір очікує отримання від клієнта згоди по обзвону",
+        "info": "",
+        "x": 1870,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "1bace1acc7ba2af1",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1730,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "40b2fea2a55a6e31",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1730,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "f27d0fa4c6f36e47",
+        "type": "pb-http-request",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": false,
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "throwNot200": false,
+        "proxy": "",
+        "authType": "",
+        "headers": "{{headers}}",
+        "payload": "{{payload}}",
+        "timeout": "",
+        "customTimeout": false,
+        "x": 2660,
+        "y": 840,
+        "wires": [
+            [
+                "ca3df6449af28318"
+            ]
+        ]
+    },
+    {
+        "id": "5d52a97146292fd6",
+        "type": "comment",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "Сигнал ответственным",
+        "info": "",
+        "x": 2680,
+        "y": 760,
+        "wires": []
+    },
+    {
+        "id": "ca3df6449af28318",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2810,
+        "y": 840,
+        "wires": []
+    },
+    {
+        "id": "fee215d518e1dca2",
+        "type": "inject",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "300",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 95,
+        "y": 300,
+        "wires": [
+            [
+                "1d343b2f489848c2"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "1d343b2f489848c2",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.url = `https://0-912-0.app.nr.it.loc/gauth/get`;\n\nif (global.get(\"NODE_ENV\") == \"development\") msg.url = `https://0-912-0.nodered-t.it.loc/gauth/get`;\n\nmsg.headers = {\n    sid: global.get(\"sid\"),\n    email: \"stanislav.gorban@privatbank.ua\"\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 200,
+        "y": 300,
+        "wires": [
+            [
+                "3d285e0be7483c86"
+            ]
+        ]
+    },
+    {
+        "id": "3d285e0be7483c86",
+        "type": "pb-http-request",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": false,
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "throwNot200": false,
+        "proxy": "",
+        "authType": "",
+        "headers": "{{headers}}",
+        "payload": "{{payload}}",
+        "timeout": "",
+        "customTimeout": false,
+        "x": 340,
+        "y": 300,
+        "wires": [
+            [
+                "dc8c4efadf3075ca"
+            ]
+        ]
+    },
+    {
+        "id": "dc8c4efadf3075ca",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "context.global.checkRes(msg, \"quarantineRestruct\", node);\n\ntry {\n    msg.payload = JSON.parse(msg.payload);\n} catch (e) { }\n\nflow.set(\"gasToken\", msg.payload.token)\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 480,
+        "y": 300,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "be6c97205393368c",
+        "type": "inject",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "Первый вызов",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "1",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 95,
+        "y": 120,
+        "wires": [
+            [
+                "2479435f5de2173d"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "2479435f5de2173d",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "DROP",
+        "func": "msg.payload = `DROP TABLE restructuring`;\n\nreturn msg;\n\n/*\nНа вход конвейера приходит реестр договоров:\n - ID клиента\n - тип договора (текущий)\n - референс договора\n - FIID договора\n \n \n \n RefContr\n ContractT = UN20|PU20   UG20|PG20   UU20  err\n \n \n if (/UN20|PU20/.test(msg.ContractT)) {\n    msg.contractTypeNEW = \"\"; \n } else if (/UG20|PG20/.test(msg.ContractT)) {\n    msg.contractTypeNEW = \"\"; \n } else if (/UU20/.test(msg.ContractT)) {\n    msg.contractTypeNEW = \"\"; \n } else {\n     throw new Error({\n         text: \"Error in msg.ContractT\"\n     });\n }\n \n*/",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 190,
+        "y": 120,
+        "wires": [
+            [
+                "4f9817025a635965"
+            ]
+        ]
+    },
+    {
+        "id": "aae5883ac1d0606e",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "context.global.log(msg, \"NEW RESTR ITEM\", node);\n\nmsg.payload = `INSERT INTO restructuring (\n        client_id, \n        ref,\n        status,\n        evt,\n        call_ref,\n        message,\n        create_time,\n        change_time)\n    VALUES\n        ('${msg.item.client_id}',\n        '${msg.item.ref}',\n        'NEW',\n        '',\n        '',\n        '',\n        '${new Date().getTime()}',\n        '${new Date().getTime()}')\n`;\n\nreturn msg;\n\n//if (global.get(\"NODE_ENV\") != \"development\") return msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 1320,
+        "wires": [
+            [
+                "9c96e40e0115ac03"
+            ]
+        ]
+    },
+    {
+        "id": "9c96e40e0115ac03",
+        "type": "postgrestor",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "restructuring",
+        "query": "{{{msg.payload}}}",
+        "postgresDB": "bacd51cd.6dea1",
+        "output": true,
+        "outputs": 1,
+        "errors": true,
+        "outField": "",
+        "x": 450,
+        "y": 1320,
+        "wires": [
+            [
+                "9bee2188a6d307cb"
+            ]
+        ]
+    },
+    {
+        "id": "62392b68fd4bcbaf",
+        "type": "inject",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "props": [
+            {
+                "p": "item",
+                "v": "{\"client_id\":\"12243729\",\"ref\":\"SAMDN51000117488949\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 160,
+        "y": 1320,
+        "wires": [
+            [
+                "aae5883ac1d0606e"
+            ]
+        ]
+    },
+    {
+        "id": "9bee2188a6d307cb",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 610,
+        "y": 1320,
+        "wires": []
+    },
+    {
+        "id": "03b8d63126f9850d",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "\nmsg.payload = `SELECT * FROM restructuring`;\n/*\n    INSERT INTO restructuring (\n        client_id, \n        ref,\n        status,\n        evt,\n        call_ref,\n        message,\n        create_time,\n        change_time)\n    VALUES\n        ('${msg.item.client_id}',\n        '${msg.item.ref}',\n        'NEW',\n        '',\n        '',\n        '',\n        '${new Date().getTime()}',\n        '${new Date().getTime()}')\n`;\n*/\n\nreturn msg;\n\n//if (global.get(\"NODE_ENV\") != \"development\") return msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 980,
+        "y": 100,
+        "wires": [
+            [
+                "3d64233522d4d996"
+            ]
+        ]
+    },
+    {
+        "id": "3d64233522d4d996",
+        "type": "postgrestor",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "restructuring",
+        "query": "{{{msg.payload}}}",
+        "postgresDB": "bacd51cd.6dea1",
+        "output": true,
+        "outputs": 1,
+        "errors": true,
+        "outField": "",
+        "x": 1130,
+        "y": 100,
+        "wires": [
+            [
+                "d879d15e6a436c33"
+            ]
+        ]
+    },
+    {
+        "id": "013a8987a51da9de",
+        "type": "inject",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "props": [
+            {
+                "p": "item",
+                "v": "{\"client_id\":\"12243729\",\"ref\":\"SAMDN51000117488949\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 840,
+        "y": 100,
+        "wires": [
+            [
+                "03b8d63126f9850d"
+            ]
+        ]
+    },
+    {
+        "id": "d879d15e6a436c33",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1290,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "29b0cfa2f302ad92",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.payload = `\n    UPDATE restructuring\n    set\n        status='ERROR',\n        message='Договір відсутній в довіднику',\n        change_time = '${new Date().getTime()}'\n    where ref='${msg.item.ref}'\n`;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2660,
+        "y": 800,
+        "wires": [
+            [
+                "68140765122d0c33",
+                "e6eba18e95d96bad"
+            ]
+        ]
+    },
+    {
+        "id": "68140765122d0c33",
+        "type": "link out",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "mode": "link",
+        "links": [
+            "3182cbc5b01e6a01"
+        ],
+        "x": 2755,
+        "y": 800,
+        "wires": []
+    },
+    {
+        "id": "d92b6e1bc159bd65",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.url = `${flow.get(\"cardsforwave\")}/stat/api/purse/module/cardsforwave/byekb/${msg.item.client_id}`;\n\nmsg.headers = {\n    \"Authorization\": global.get(\"sid\"),\n    \"Accept\": \"application/json\"\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1740,
+        "y": 380,
+        "wires": [
+            [
+                "b734ceb451616def"
+            ]
+        ]
+    },
+    {
+        "id": "b734ceb451616def",
+        "type": "pb-http-request",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "cardsforwave",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": false,
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "throwNot200": false,
+        "proxy": "",
+        "authType": "",
+        "headers": "{{headers}}",
+        "payload": "{{payload}}",
+        "timeout": "",
+        "customTimeout": false,
+        "x": 1890,
+        "y": 380,
+        "wires": [
+            [
+                "f1d8b7a3a38c5406",
+                "8bcdd2d233a55b03"
+            ]
+        ]
+    },
+    {
+        "id": "85de4e4d5db7892d",
+        "type": "catch",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "scope": [
+            "b734ceb451616def"
+        ],
+        "uncaught": false,
+        "x": 1880,
+        "y": 420,
+        "wires": [
+            [
+                "f1d8b7a3a38c5406"
+            ]
+        ]
+    },
+    {
+        "id": "f1d8b7a3a38c5406",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "Анализ кошелька",
+        "func": "context.global.checkRes(msg, \"cardsforwave\", node);\n\ntry { msg.payload = JSON.parse(msg.payload); } catch (e) { }\n\nmsg.cards = msg.payload;\n\nif (msg.statusCode == 200) return [msg, null];\n\nmsg.repeatCounter = msg.repeatCounter ? msg.repeatCounter : 0;\n\nif (msg.repeatCounter < 4) return [null, msg];\n\nmsg.message = \"Помилка перевірки гаманця 1. Перевищено кількість спроб.\";\n\nthrow new Error(\"Ошибка вызова кошелька 1\");",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2070,
+        "y": 380,
+        "wires": [
+            [
+                "1c6ca5d5d87eb94b"
+            ],
+            [
+                "85c654e0ede55a5f"
+            ]
+        ]
+    },
+    {
+        "id": "85c654e0ede55a5f",
+        "type": "pb-delay",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "30",
+        "timeoutUnits": "minutes",
+        "sendTasks": true,
+        "showStatus": false,
+        "x": 2240,
+        "y": 440,
+        "wires": [
+            [
+                "e084d62733807448",
+                "7f5e0c4606a1b96c"
+            ]
+        ]
+    },
+    {
+        "id": "e084d62733807448",
+        "type": "link out",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "mode": "link",
+        "links": [
+            "bd66a0b396d8a108"
+        ],
+        "x": 2335,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "bd66a0b396d8a108",
+        "type": "link in",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "links": [
+            "e084d62733807448"
+        ],
+        "x": 1635,
+        "y": 380,
+        "wires": [
+            [
+                "d92b6e1bc159bd65"
+            ]
+        ]
+    },
+    {
+        "id": "1c6ca5d5d87eb94b",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.card = findCardByRef(msg.cards, msg.item.ref)[0];\n\nif (!msg.card) {\n    msg.message = 'Договір відсутній в довіднику';\n    return [msg, null];\n} else if (msg.card) {\n    if (/WARR|WARG|RTVI|RTVW|RTVS|RTVE|RTPV/.test(msg.card.contract_type)) {\n        msg.message = 'Дублювання успішної заявки';\n        return [null, msg];\n    } \n    \n    if (/CRP7|CRG7|CRW0|CRG0|CRVI|CRVW|CRVS|CRVE|CRPV|CHVI|CHVW|CHVS|CHVE|CHPV/.test(msg.card.contract_type)) {\n        \n        msg.url = `${flow.get(\"saw121212\")}/DesktopGUI/quarantineRestruct/${msg.item.ref}.cors`;\n        \n        msg.payload = { \n            \"state\": \"Y\" \n        };\n\n        msg.headers = {\n            \"Content-type\": \"application/json\",\n            \"Authorization\": global.get(\"sid\")\n        };\n\n        return [null, null, msg];\n    }\n\n    msg.message = 'Тип договору не доступний для операції';\n    return [msg, null];\n    \n}\n\n\nfunction findCardByRef(cards, ref) {\n    if (!Array.isArray(cards)) return [];\n    return cards.filter(item => item.refcontract == ref);\n}",
+        "outputs": 3,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2240,
+        "y": 320,
+        "wires": [
+            [
+                "06f682719182477d"
+            ],
+            [
+                "e33a47ec1b12f856"
+            ],
+            [
+                "145d66aa76d8e13d"
+            ]
+        ]
+    },
+    {
+        "id": "06f682719182477d",
+        "type": "CRM",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "CKK3",
+        "typesid": "global",
+        "typeevt": "str",
+        "typest": "str",
+        "typesrc": "str",
+        "typeaddrid": "msg",
+        "typeaddrtype": "str",
+        "typebank": "str",
+        "typelang": "str",
+        "typeref": "msg",
+        "typemailto": "msg",
+        "typeextref": "msg",
+        "typeattrs": "msg",
+        "req": "param",
+        "sid": "sid",
+        "evt": "127432",
+        "st": "WT",
+        "src": "NRB",
+        "addrid": "item.client_id",
+        "addrtype": "CI",
+        "bank": "PB",
+        "lang": "UA",
+        "types": "create",
+        "typeId": "CI",
+        "params": [
+            {
+                "ATTR1": "item.ref",
+                "typekeyATTR1": "msg"
+            },
+            {
+                "extref": "item.client_id",
+                "typekeyextref": "msg"
+            }
+        ],
+        "ownparams": [],
+        "typesState": "create",
+        "object": {
+            "evt": "127432",
+            "st": "WT",
+            "src": "NRB",
+            "addrid": "item.client_id",
+            "addrtype": "CI",
+            "bank": "PB",
+            "lang": "UA",
+            "attrs": {
+                "ATTR1": "item.ref",
+                "typekeyATTR1": "msg"
+            },
+            "extref": "item.client_id"
+        },
+        "attrs": "",
+        "ref": "",
+        "attsadd": false,
+        "hist": false,
+        "arc": false,
+        "newparam": false,
+        "kibana": true,
+        "mainparams": {},
+        "mailto": "",
+        "x": 2370,
+        "y": 280,
+        "wires": [
+            [
+                "2b96672a17b05f23",
+                "678a3e26d6d39192"
+            ]
+        ]
+    },
+    {
+        "id": "cfa991854b29cc9f",
+        "type": "link out",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "mode": "link",
+        "links": [
+            "3182cbc5b01e6a01"
+        ],
+        "x": 2635,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "e33a47ec1b12f856",
+        "type": "CRM",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "CKK2",
+        "typesid": "global",
+        "typeevt": "str",
+        "typest": "str",
+        "typesrc": "str",
+        "typeaddrid": "msg",
+        "typeaddrtype": "str",
+        "typebank": "str",
+        "typelang": "str",
+        "typeref": "msg",
+        "typemailto": "msg",
+        "typeextref": "msg",
+        "typeattrs": "msg",
+        "req": "param",
+        "sid": "sid",
+        "evt": "127435",
+        "st": "WT",
+        "src": "NRB",
+        "addrid": "item.client_id",
+        "addrtype": "CI",
+        "bank": "PB",
+        "lang": "UA",
+        "types": "create",
+        "typeId": "CI",
+        "params": [
+            {
+                "ATTR1": "item.ref",
+                "typekeyATTR1": "msg"
+            },
+            {
+                "extref": "item.client_id",
+                "typekeyextref": "msg"
+            }
+        ],
+        "ownparams": [],
+        "typesState": "create",
+        "object": {
+            "evt": "127435",
+            "st": "WT",
+            "src": "NRB",
+            "addrid": "item.client_id",
+            "addrtype": "CI",
+            "bank": "PB",
+            "lang": "UA",
+            "attrs": {
+                "ATTR1": "item.ref",
+                "typekeyATTR1": "msg"
+            },
+            "extref": "item.client_id"
+        },
+        "attrs": "",
+        "ref": "",
+        "attsadd": false,
+        "hist": false,
+        "arc": false,
+        "newparam": false,
+        "kibana": true,
+        "mainparams": {},
+        "mailto": "",
+        "x": 2370,
+        "y": 320,
+        "wires": [
+            [
+                "2b96672a17b05f23",
+                "74dfee02cdd64229"
+            ]
+        ]
+    },
+    {
+        "id": "145d66aa76d8e13d",
+        "type": "pb-http-request",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "/quarantineRestruct",
+        "method": "PUT",
+        "ret": "txt",
+        "paytoqs": false,
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "throwNot200": false,
+        "proxy": "",
+        "authType": "",
+        "headers": "{{headers}}",
+        "payload": "{{payload}}",
+        "timeout": "",
+        "customTimeout": false,
+        "x": 2430,
+        "y": 600,
+        "wires": [
+            [
+                "da4d3f53ce7e5f1b"
+            ]
+        ]
+    },
+    {
+        "id": "da4d3f53ce7e5f1b",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "context.global.checkRes(msg, \"quarantineRestruct\", node);\n\ntry { msg.payload = JSON.parse(msg.payload); } catch (e) { }\n\nmsg.createRes = msg.payload;\n\nmsg.message = \"Надіслано пропозицію\";\n\nif (msg.statusCode == 200) return [msg, null];\n\nmsg.repeatCounter = msg.repeatCounter ? msg.repeatCounter : 0;\n\nif (msg.repeatCounter < 6) return [null, msg];\n\nmsg.message = \"Помилка встановлення статусу Y. Перевищено кількість спроб.\";\n\nthrow new Error(\"Ошибка сервиса установки статуса Y\");",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2600,
+        "y": 600,
+        "wires": [
+            [
+                "1633cd0679e4231d"
+            ],
+            [
+                "f4d524db4719d35f"
+            ]
+        ]
+    },
+    {
+        "id": "d93b7cba6f3b529a",
+        "type": "link out",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "mode": "link",
+        "links": [
+            "fa9eb06ced74f9d9"
+        ],
+        "x": 2855,
+        "y": 620,
+        "wires": []
+    },
+    {
+        "id": "f4d524db4719d35f",
+        "type": "pb-delay",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "30",
+        "timeoutUnits": "minutes",
+        "sendTasks": true,
+        "showStatus": false,
+        "x": 2760,
+        "y": 620,
+        "wires": [
+            [
+                "d93b7cba6f3b529a",
+                "284694ceb7bb1aef"
+            ]
+        ]
+    },
+    {
+        "id": "fa9eb06ced74f9d9",
+        "type": "link in",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "links": [
+            "d93b7cba6f3b529a"
+        ],
+        "x": 2345,
+        "y": 640,
+        "wires": [
+            [
+                "a7d2bb2d5dcf4380"
+            ]
+        ]
+    },
+    {
+        "id": "a7d2bb2d5dcf4380",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.url = `${flow.get(\"saw121212\")}/DesktopGUI/quarantineRestruct/${msg.item.ref}.cors`;\n\nmsg.payload = {\n    \"state\": \"Y\"\n};\n\nmsg.headers = {\n    \"Content-type\": \"application/json\",\n    \"Authorization\": global.get(\"sid\")\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2440,
+        "y": 640,
+        "wires": [
+            [
+                "145d66aa76d8e13d"
+            ]
+        ]
+    },
+    {
+        "id": "1633cd0679e4231d",
+        "type": "CRM",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "CKK1_1/CKK1_2",
+        "typesid": "global",
+        "typeevt": "str",
+        "typest": "str",
+        "typesrc": "str",
+        "typeaddrid": "msg",
+        "typeaddrtype": "str",
+        "typebank": "str",
+        "typelang": "str",
+        "typeref": "msg",
+        "typemailto": "msg",
+        "typeextref": "msg",
+        "typeattrs": "msg",
+        "req": "param",
+        "sid": "sid",
+        "evt": "127389",
+        "st": "WT",
+        "src": "NRB",
+        "addrid": "item.client_id",
+        "addrtype": "CI",
+        "bank": "PB",
+        "lang": "UA",
+        "types": "create",
+        "typeId": "CI",
+        "params": [
+            {
+                "ATTR1": "item.ref",
+                "typekeyATTR1": "msg"
+            },
+            {
+                "extref": "item.client_id",
+                "typekeyextref": "msg"
+            }
+        ],
+        "ownparams": [],
+        "typesState": "create",
+        "object": {
+            "evt": "127389",
+            "st": "WT",
+            "src": "NRB",
+            "addrid": "item.client_id",
+            "addrtype": "CI",
+            "bank": "PB",
+            "lang": "UA",
+            "attrs": {
+                "ATTR1": "item.ref",
+                "typekeyATTR1": "msg"
+            },
+            "extref": "item.client_id"
+        },
+        "attrs": "",
+        "ref": "",
+        "attsadd": false,
+        "hist": false,
+        "arc": false,
+        "newparam": false,
+        "kibana": true,
+        "mainparams": {},
+        "mailto": "",
+        "x": 2790,
+        "y": 580,
+        "wires": [
+            [
+                "856cb148184c7b3c",
+                "5861444dd6bc5e66"
+            ]
+        ]
+    },
+    {
+        "id": "3506942c1ecbc71c",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.url = `${flow.get(\"saw121212\")}/DesktopGUI/quarantineRestruct/${msg.item.ref}.cors`;\n\nmsg.payload = {\n    \"state\": \"Y\"\n};\n\nmsg.headers = {\n    \"Content-type\": \"application/json\",\n    \"Authorization\": global.get(\"sid\")\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1740,
+        "y": 580,
+        "wires": [
+            [
+                "145d66aa76d8e13d"
+            ]
+        ]
+    },
+    {
+        "id": "94452b2ce7a17fcd",
+        "type": "inject",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "props": [],
+        "repeat": "",
+        "crontab": "00 10 * * *",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 95,
+        "y": 880,
+        "wires": [
+            [
+                "f4bbd874448df748"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "87a5abebd84dea1f",
+        "type": "comment",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "Ежедневный мониторинг",
+        "info": "",
+        "x": 190,
+        "y": 840,
+        "wires": []
+    },
+    {
+        "id": "f4bbd874448df748",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.LOG = \"\";\nlet date = new Date();\n\ndate.setDate(date.getDate()-1);\ndate.setHours(23);\ndate.setMinutes(59);\ndate.setSeconds(59);\n\nnode.status({ fill: \"green\", shape: \"dot\", text: `${moment().format('YYYY-MM-DD HH:mm:ss')}` });\n\nmsg.payload = `SELECT * FROM restructuring\n                WHERE status='NEW' and create_time<'${date.getTime()}'`;\n/*\n    INSERT INTO restructuring (\n        client_id, \n        ref,\n        status,\n        evt,\n        call_ref\n        createTime)\n    VALUES\n        ('${msg.item.client_id}',\n        '${msg.item.ref}',\n        'NEW',\n        '',\n        ''\n        '${new Date().getTime()}')\n`;\n*/\n\nreturn msg;\n\n//if (global.get(\"NODE_ENV\") != \"development\") return msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 200,
+        "y": 880,
+        "wires": [
+            [
+                "cdffd55c4ee50b26"
+            ]
+        ]
+    },
+    {
+        "id": "cdffd55c4ee50b26",
+        "type": "postgrestor",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "restructuring",
+        "query": "{{{msg.payload}}}",
+        "postgresDB": "bacd51cd.6dea1",
+        "output": true,
+        "outputs": 1,
+        "errors": true,
+        "outField": "",
+        "x": 350,
+        "y": 880,
+        "wires": [
+            [
+                "1b71ec7fa419a2b8"
+            ]
+        ]
+    },
+    {
+        "id": "1b71ec7fa419a2b8",
+        "type": "pb-queue-out",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "queueName": "Restruct",
+        "queueNameType": "str",
+        "operation": "set",
+        "what": "payload.rows",
+        "whatType": "msg",
+        "msgid": false,
+        "fromArray": true,
+        "packet": false,
+        "x": 510,
+        "y": 880,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "90e96fc7e455ed45",
+        "type": "pb-queue-in",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "queueName": "Restruct",
+        "queueNameType": "str",
+        "throughput": "5",
+        "what": "item",
+        "whatType": "msg",
+        "x": 510,
+        "y": 920,
+        "wires": [
+            [
+                "9e0ac3b24c6fa779"
+            ]
+        ]
+    },
+    {
+        "id": "9e0ac3b24c6fa779",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.url = `${flow.get(\"cardsforwave\")}/stat/api/purse/module/cardsforwave/byekb/${msg.item.client_id}`;\n\nmsg.headers = {\n    \"Authorization\": global.get(\"sid\"),\n    \"Accept\": \"application/json\"\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 660,
+        "y": 920,
+        "wires": [
+            [
+                "344421711a485051"
+            ]
+        ]
+    },
+    {
+        "id": "344421711a485051",
+        "type": "pb-http-request",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "cardsforwave",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": false,
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "throwNot200": false,
+        "proxy": "",
+        "authType": "",
+        "headers": "{{headers}}",
+        "payload": "{{payload}}",
+        "timeout": "",
+        "customTimeout": false,
+        "x": 810,
+        "y": 920,
+        "wires": [
+            [
+                "bdfb0cfc652c2d2c",
+                "67060a2ca8b602d7"
+            ]
+        ]
+    },
+    {
+        "id": "bdfb0cfc652c2d2c",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "Анализ кошелька",
+        "func": "context.global.checkRes(msg, \"cardsforwave 2\", node);\n\ntry { msg.payload = JSON.parse(msg.payload); } catch (e) { }\n\nmsg.cards = msg.payload;\n\nif (msg.statusCode == 200 && msg.payload.code != \"INTERNAL_ERROR\") return [msg, null];\n\nmsg.repeatCounter = msg.repeatCounter ? msg.repeatCounter : 0;\n\nif (msg.repeatCounter < 4) return [null, msg];\n\nmsg.message = \"Помилка перевірки гаманця 2. Перевищено кількість спроб.\";\n\nthrow new Error(\"Ошибка вызова кошелька 2\");",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 990,
+        "y": 920,
+        "wires": [
+            [
+                "23f248447b88935b"
+            ],
+            [
+                "80cafc244ba4d7d0"
+            ]
+        ]
+    },
+    {
+        "id": "8ab135b51e511091",
+        "type": "catch",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "scope": [
+            "344421711a485051"
+        ],
+        "uncaught": false,
+        "x": 800,
+        "y": 960,
+        "wires": [
+            [
+                "bdfb0cfc652c2d2c"
+            ]
+        ]
+    },
+    {
+        "id": "80cafc244ba4d7d0",
+        "type": "pb-delay",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "30",
+        "timeoutUnits": "minutes",
+        "sendTasks": true,
+        "showStatus": false,
+        "x": 1160,
+        "y": 960,
+        "wires": [
+            [
+                "bd56c2df30a8264a"
+            ]
+        ]
+    },
+    {
+        "id": "bd56c2df30a8264a",
+        "type": "link out",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "mode": "link",
+        "links": [
+            "57f99e223d348891"
+        ],
+        "x": 1255,
+        "y": 960,
+        "wires": []
+    },
+    {
+        "id": "57f99e223d348891",
+        "type": "link in",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "links": [
+            "bd56c2df30a8264a"
+        ],
+        "x": 565,
+        "y": 960,
+        "wires": [
+            [
+                "9e0ac3b24c6fa779"
+            ]
+        ]
+    },
+    {
+        "id": "23f248447b88935b",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.card = findCardByRef(msg.cards, msg.item.ref)[0];\n\nif (!msg.card) {\n    msg.message = 'Договір відсутній в гаманці клієнта';\n    return [msg, null];\n} else if (msg.card) {\n    if (/WARR|WARG|RTVI|RTVW|RTVS|RTVE|RTPV/.test(msg.card.contract_type)) {\n        msg.message = 'Успішна заявка';\n        return [null, msg];\n    } \n    \n    if (/CRP7|CRG7|CRW0|CRG0|CRVI|CRVW|CRVS|CRVE|CRPV|CHVI|CHVW|CHVS|CHVE|CHPV/.test(msg.card.contract_type)) {\n        \n        msg.url = `${flow.get(\"sup\")}/solutionRestrCollectionAndNSK/run`;\n        \n        msg.payload = { \n            \"clientId\": msg.item.client_id,\n            \"ref\": msg.item.ref\n        };\n\n        msg.headers = {\n            \"Content-type\": \"application/json\",\n            \"Authorization\": global.get(\"sid\"),\n            \"sid\": global.get(\"sid\")\n        };\n\n        return [null, null, msg];\n    }\n\n    msg.message = 'Тип договору не доступний для операції';\n    \n    return [msg, null];\n    \n}\n\n\nfunction findCardByRef(cards, ref) {\n    if (!Array.isArray(cards)) return [];\n    return cards.filter(item => item.refcontract == ref);\n}",
+        "outputs": 3,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1160,
+        "y": 880,
+        "wires": [
+            [
+                "8cef2b263a3fd1c9",
+                "72977ea4fe621114",
+                "7a1e291de2b49de3"
+            ],
+            [
+                "c4dd5e5f9233cfce",
+                "e2b7463d7ee3d58c"
+            ],
+            [
+                "b7d1a2436212ad87"
+            ]
+        ]
+    },
+    {
+        "id": "7b312988cdd33fc3",
+        "type": "pb-http-request",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "/quarantineRestruct",
+        "method": "PUT",
+        "ret": "txt",
+        "paytoqs": false,
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "throwNot200": false,
+        "proxy": "",
+        "authType": "",
+        "headers": "{{headers}}",
+        "payload": "{{payload}}",
+        "timeout": "",
+        "customTimeout": false,
+        "x": 1970,
+        "y": 840,
+        "wires": [
+            [
+                "2c0def0432c2ac51"
+            ]
+        ]
+    },
+    {
+        "id": "1c4328d1d01c15b8",
+        "type": "link in",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "links": [
+            "f6c1f537e01b6fd1"
+        ],
+        "x": 1705,
+        "y": 840,
+        "wires": [
+            [
+                "8cef2b263a3fd1c9"
+            ]
+        ]
+    },
+    {
+        "id": "8cef2b263a3fd1c9",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.url = `${flow.get(\"saw121212\")}/DesktopGUI/quarantineRestruct/${msg.item.ref}.cors`;\n\nmsg.payload = {\n    \"state\": \"N\"\n};\n\nmsg.headers = {\n    \"Content-type\": \"application/json\",\n    \"Authorization\": global.get(\"sid\")\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1800,
+        "y": 840,
+        "wires": [
+            [
+                "7b312988cdd33fc3"
+            ]
+        ]
+    },
+    {
+        "id": "2c0def0432c2ac51",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "context.global.checkRes(msg, \"quarantineRestruct 2\", node);\n\ntry { msg.payload = JSON.parse(msg.payload); } catch (e) { }\n\nmsg.createRes = msg.payload;\n\nif (msg.statusCode == 200) return [msg, null];\n\nmsg.repeatCounter = msg.repeatCounter ? msg.repeatCounter : 0;\n\nif (msg.repeatCounter < 6) return [null, msg];\n\nmsg.message = \"Помилка встановлення статусу N. Перевищено кількість спроб.\";\n\nthrow new Error(\"Ошибка сервиса установки статуса Y\");\n",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2140,
+        "y": 840,
+        "wires": [
+            [
+                "18fcf61fdac8dcb7"
+            ],
+            [
+                "1dbe40b83d2a5b6a"
+            ]
+        ]
+    },
+    {
+        "id": "1dbe40b83d2a5b6a",
+        "type": "pb-delay",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "30",
+        "timeoutUnits": "minutes",
+        "sendTasks": true,
+        "showStatus": false,
+        "x": 2280,
+        "y": 860,
+        "wires": [
+            [
+                "f6c1f537e01b6fd1"
+            ]
+        ]
+    },
+    {
+        "id": "f6c1f537e01b6fd1",
+        "type": "link out",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "mode": "link",
+        "links": [
+            "1c4328d1d01c15b8"
+        ],
+        "x": 2375,
+        "y": 860,
+        "wires": []
+    },
+    {
+        "id": "7d9b362e4b2753b0",
+        "type": "link out",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "mode": "link",
+        "links": [
+            "3182cbc5b01e6a01"
+        ],
+        "x": 2025,
+        "y": 900,
+        "wires": []
+    },
+    {
+        "id": "2b96672a17b05f23",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.skkInfo = msg.payload;\n\nif (!msg.skkInfo.ref) {\n    msg.payload = `\n        UPDATE restructuring\n        set\n            status='ERROR',\n            message='${msg.message}',\n            change_time = '${new Date().getTime()}'\n        where ref='${msg.item.ref}'\n    `;\n} else {\n    msg.payload = `\n        UPDATE restructuring\n        set\n            status='ERROR',\n            message='${msg.message}',\n            evt='${msg.skkInfo.evt}',\n            call_ref = '${msg.skkInfo.ref}',\n            change_time = '${new Date().getTime()}'\n        where ref='${msg.item.ref}'\n    `;\n}\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2540,
+        "y": 300,
+        "wires": [
+            [
+                "cfa991854b29cc9f",
+                "3c7c2d0e17e6357f"
+            ]
+        ]
+    },
+    {
+        "id": "856cb148184c7b3c",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.skkInfo = msg.payload;\n\nmsg.message = \"Щоденний моніторинг\";\n\nmsg.payload = `\n    UPDATE restructuring\n    set\n        message='${msg.message}',\n        evt='${msg.skkInfo.evt}',\n        call_ref = '${msg.skkInfo.ref}',\n        change_time = '${new Date().getTime()}'\n    where ref='${msg.item.ref}'\n`;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2980,
+        "y": 580,
+        "wires": [
+            [
+                "06af8fc411b5d910"
+            ]
+        ]
+    },
+    {
+        "id": "f0d333ba60d42a2b",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.skkInfo = msg.payload;\n\nif (msg.message) {\n    msg.payload = `\n        UPDATE restructuring\n        set\n            message='${msg.message}',\n            change_time = '${new Date().getTime()}'\n        where ref='${msg.item.ref}'\n    `;\n\n    return msg;\n}",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 120,
+        "wires": [
+            [
+                "aa8dca34e23db39b"
+            ]
+        ]
+    },
+    {
+        "id": "aa8dca34e23db39b",
+        "type": "link out",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "mode": "link",
+        "links": [
+            "3182cbc5b01e6a01"
+        ],
+        "x": 655,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "06af8fc411b5d910",
+        "type": "link out",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "mode": "link",
+        "links": [
+            "3182cbc5b01e6a01"
+        ],
+        "x": 3075,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "251b9340f444f938",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.message = \"Щоденний моніторинг\";\n\nmsg.payload = `\n    UPDATE restructuring\n    set\n        message='${msg.message}',\n        change_time = '${new Date().getTime()}'\n    where ref='${msg.item.ref}'\n`;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1860,
+        "y": 480,
+        "wires": [
+            [
+                "20c81a522ce1c5db"
+            ]
+        ]
+    },
+    {
+        "id": "20c81a522ce1c5db",
+        "type": "link out",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "mode": "link",
+        "links": [
+            "3182cbc5b01e6a01"
+        ],
+        "x": 1955,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "024eb681c6a6a86b",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.skkInfo = msg.payload;\n\nif (!msg.skkInfo.ref) {\n    msg.payload = `\n        UPDATE restructuring\n        set\n            status='ERROR',\n            message='${msg.message}',\n            change_time = '${new Date().getTime()}'\n        where ref='${msg.item.ref}'\n    `;\n} else {\n    msg.payload = `\n        UPDATE restructuring\n        set\n            status='ERROR',\n            message='${msg.message}',\n            evt='${msg.skkInfo.evt}',\n            call_ref = '${msg.skkInfo.ref}',\n            change_time = '${new Date().getTime()}'\n        where ref='${msg.item.ref}'\n    `;\n}\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1920,
+        "y": 880,
+        "wires": [
+            [
+                "7d9b362e4b2753b0",
+                "8e2b2786373c242c"
+            ]
+        ]
+    },
+    {
+        "id": "c4dd5e5f9233cfce",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.skkInfo = msg.payload;\n\nmsg.payload = `\n    UPDATE restructuring\n    set\n        status='OK',\n        message='${msg.message}',\n        change_time = '${new Date().getTime()}'\n    where ref='${msg.item.ref}'\n`;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1920,
+        "y": 920,
+        "wires": [
+            [
+                "7d9b362e4b2753b0",
+                "8e2b2786373c242c"
+            ]
+        ]
+    },
+    {
+        "id": "b7d1a2436212ad87",
+        "type": "pb-http-request",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "/solutionRestrCollectionAndNSK",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": false,
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "throwNot200": false,
+        "proxy": "",
+        "authType": "",
+        "headers": "{{headers}}",
+        "payload": "{{payload}}",
+        "timeout": "",
+        "customTimeout": false,
+        "x": 1430,
+        "y": 940,
+        "wires": [
+            [
+                "adee6411f1473251"
+            ]
+        ]
+    },
+    {
+        "id": "adee6411f1473251",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "/*\n{\n    \"result\":[\n        {\n            \"DEPART_RESTR\":\"Collection\",\n            \"FL_ALL_CRITERIES_PASS_ALL\":\"Y\",\n            \"REF\":\"13012200134563\",\n            \"STATUS\":\"NORM\",\n            \"AMT_SUM\":\"0.00\",\n            \"SUM_DEBT\":\"0.00\",\n            \"PRODUCT\":\"INSTALLMENT              \",\n            \"INN\":\"3128116366  \",\n            \"REFCONTRACT\":\"13012200134563           \",\n            \"CLIENTID\":\"49922324\",\n            \"NAME_CLIENT\":\"БУРУН ОЛЕНА МИКОЛАЇВНА\"\n        }\n    ],\n    \"status\":\"success\"\n}\n*/\ncontext.global.checkRes(msg, \"SolutionRESTR\", node);\n\ntry { msg.payload = JSON.parse(msg.payload); } catch (e) { }\n\nmsg.solRes = msg.payload;\n\nif (!Array.isArray(msg.solRes.result)) {\n    //вернулась строка без решения\n    msg.message = 'Відмова після перерахунку';\n    return [msg, null];\n}\n\nmsg.FL_ALL_CRITERIES_PASS_ALL = msg.solRes.result[0].FL_ALL_CRITERIES_PASS_ALL;\n\nif (msg.FL_ALL_CRITERIES_PASS_ALL == \"N\") {\n    msg.message = 'Відмова після перерахунку';\n    return [msg, null];\n}\n\nif (msg.FL_ALL_CRITERIES_PASS_ALL == \"Y\") {\n    return [null, msg];\n}",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1640,
+        "y": 940,
+        "wires": [
+            [
+                "72977ea4fe621114",
+                "8cef2b263a3fd1c9"
+            ],
+            [
+                "376c9a1659a8293f"
+            ]
+        ]
+    },
+    {
+        "id": "376c9a1659a8293f",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "Запрос \\n рабочий стол",
+        "func": "msg.url = `${flow.get(\"startPb\")}/DesktopGUI/quarantineRestruct.cors?clid=${msg.item.client_id}`;\n\nmsg.headers = {\n    \"Content-type\": \"application/json\",\n    \"Authorization\": global.get(\"sid\")\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1800,
+        "y": 1000,
+        "wires": [
+            [
+                "63a09b6b7c53b78c"
+            ]
+        ]
+    },
+    {
+        "id": "63a09b6b7c53b78c",
+        "type": "pb-http-request",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "/quarantineRestruct.cors",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": false,
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "throwNot200": false,
+        "proxy": "",
+        "authType": "",
+        "headers": "{{headers}}",
+        "payload": "{{payload}}",
+        "timeout": "",
+        "customTimeout": false,
+        "x": 2010,
+        "y": 1000,
+        "wires": [
+            [
+                "145a4ea563c798ab",
+                "39a560728ec0df8b"
+            ]
+        ]
+    },
+    {
+        "id": "145a4ea563c798ab",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "Проверка результата",
+        "func": "context.global.checkRes(msg, \"quarantineRestruct 2\", node);\n\ntry {\n    msg.payload = JSON.parse(msg.payload);\n} catch (e) { }\n\nif (msg.statusCode == 200) {\n    msg.startRes = msg.payload.result;\n    msg.repeatCounter = 0;\n    return [msg, null];\n} else {\n    context.global.error(msg, `Ошибка поиска на раб столе 2`, node);\n    msg.repeatCounter = msg.repeatCounter ? msg.repeatCounter : 0;\n    if (msg.repeatCounter < 6) {\n        return [null, msg];\n    } \n    msg.message = \"Помилка перевірки довідника 2. Перевищено кількість спроб. Продовжено моніторинг\"\n    throw new Error(\"Превышено кол-во запросов к справочнику 2\");\n}",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2240,
+        "y": 1000,
+        "wires": [
+            [
+                "21352a3ff70b1e6c"
+            ],
+            [
+                "654a782dab1a8a4b"
+            ]
+        ]
+    },
+    {
+        "id": "654a782dab1a8a4b",
+        "type": "pb-delay",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "30",
+        "timeoutUnits": "minutes",
+        "sendTasks": true,
+        "showStatus": false,
+        "x": 2440,
+        "y": 1040,
+        "wires": [
+            [
+                "79574eeffdb27a4a",
+                "7827b6b4fef752ad"
+            ]
+        ]
+    },
+    {
+        "id": "79574eeffdb27a4a",
+        "type": "link out",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "mode": "link",
+        "links": [
+            "7c814840fa7fdad4"
+        ],
+        "x": 2535,
+        "y": 1040,
+        "wires": []
+    },
+    {
+        "id": "7c814840fa7fdad4",
+        "type": "link in",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "links": [
+            "79574eeffdb27a4a"
+        ],
+        "x": 1675,
+        "y": 1000,
+        "wires": [
+            [
+                "376c9a1659a8293f"
+            ]
+        ]
+    },
+    {
+        "id": "21352a3ff70b1e6c",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "Анализ статуса",
+        "func": "//переберем все заявки из ответа \n//и сверим с рефом от софтов\nmsg.isPresent = false;\n\nmsg.startRes.forEach(function(item){\n    if (item.refId == msg.item.ref) {\n        msg.isPresent = true;\n        msg.state = item.state;\n    }\n});\n\nif (msg.isPresent) {\n    if (msg.state == \"N\" || msg.state == \"X\") {\n        return [msg, null, null];\n    } else if (msg.state == \"Y\" || msg.state == \"C\") {\n        msg.message = \"Продовжено моніторинг\";\n        return [null, msg, null];\n    } \n} else {\n    //отправить письмо Ляшко\n    msg.url = \"https://script.google.com/a/macros/privatbank.ua/s/AKfycbz0xvQhF7pViiaHNh9-5Hjm_e0ePcDuwFdmeRl3_Ir2t69egePNcIDdUhmMTQSajO0C/exec\";\n    \n    msg.payload = {\n        subject: \"Договір відсутній в довіднику\",\n        message: `По клиенту ${msg.item.client_id} не найдена информация в справочнике DESKTOP.quarantine_restr. Реф: ${msg.item.ref}`,\n        email: [\"aleksej.ljashko@privatbank.ua\"]\n    };\n\n    msg.headers = {\n        \"Authorization\": `Bearer ${flow.get(\"gasToken\")}`\n    };\n\n    return [null, null, msg];\n}",
+        "outputs": 3,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2460,
+        "y": 980,
+        "wires": [
+            [
+                "8fe16ec7a3815d76"
+            ],
+            [
+                "4e25d9e8cdb21658"
+            ],
+            [
+                "29b0cfa2f302ad92",
+                "64ed7f04d77cdc09"
+            ]
+        ]
+    },
+    {
+        "id": "4e25d9e8cdb21658",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.payload = `\n    UPDATE restructuring\n    set\n        message = msg.message,\n        change_time = '${new Date().getTime()}'\n    where ref='${msg.item.ref}'\n`;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2660,
+        "y": 980,
+        "wires": [
+            [
+                "66ec3bee04798d06",
+                "4ebe470b4a9c43a1"
+            ]
+        ]
+    },
+    {
+        "id": "66ec3bee04798d06",
+        "type": "link out",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "mode": "link",
+        "links": [
+            "3182cbc5b01e6a01"
+        ],
+        "x": 2755,
+        "y": 980,
+        "wires": []
+    },
+    {
+        "id": "8fe16ec7a3815d76",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.url = `${flow.get(\"saw121212\")}/DesktopGUI/quarantineRestruct/${msg.item.ref}.cors`;\n\nmsg.payload = {\n    \"state\": \"Y\"\n};\n\nmsg.headers = {\n    \"Content-type\": \"application/json\",\n    \"Authorization\": global.get(\"sid\")\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2660,
+        "y": 940,
+        "wires": [
+            [
+                "1b17d52213f805b1"
+            ]
+        ]
+    },
+    {
+        "id": "1b17d52213f805b1",
+        "type": "pb-http-request",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "/quarantineRestruct",
+        "method": "PUT",
+        "ret": "txt",
+        "paytoqs": false,
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "throwNot200": false,
+        "proxy": "",
+        "authType": "",
+        "headers": "{{headers}}",
+        "payload": "{{payload}}",
+        "timeout": "",
+        "customTimeout": false,
+        "x": 2910,
+        "y": 940,
+        "wires": [
+            [
+                "0654dba3d5e6ef35",
+                "f1a29cefe492b0ed"
+            ]
+        ]
+    },
+    {
+        "id": "0654dba3d5e6ef35",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "context.global.checkRes(msg, \"quarantineRestruct\", node);\n\ntry { msg.payload = JSON.parse(msg.payload); } catch (e) { }\n\nmsg.createRes = msg.payload;\n\nmsg.message = \"Надіслано пропозицію\";\n\nif (msg.statusCode == 200) return [msg, null];\n\nmsg.repeatCounter = msg.repeatCounter ? msg.repeatCounter : 0;\n\nif (msg.repeatCounter < 6) return [null, msg];\n\nmsg.message = \"Помилка встановлення статусу Y. Перевищено кількість спроб.\";\n\nthrow new Error(\"Ошибка сервиса установки статуса Y\");",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 3080,
+        "y": 940,
+        "wires": [
+            [
+                "8860a122b20adc89"
+            ],
+            [
+                "415f3c3207088e70"
+            ]
+        ]
+    },
+    {
+        "id": "415f3c3207088e70",
+        "type": "pb-delay",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "30",
+        "timeoutUnits": "minutes",
+        "sendTasks": true,
+        "showStatus": false,
+        "x": 3240,
+        "y": 960,
+        "wires": [
+            [
+                "e0105bf6170274de",
+                "4d376df18c49915d"
+            ]
+        ]
+    },
+    {
+        "id": "fda6372c79ad804a",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.url = `${flow.get(\"saw121212\")}/DesktopGUI/quarantineRestruct/${msg.item.ref}.cors`;\n\nmsg.payload = {\n    \"state\": \"Y\"\n};\n\nmsg.headers = {\n    \"Content-type\": \"application/json\",\n    \"Authorization\": global.get(\"sid\")\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2880,
+        "y": 900,
+        "wires": [
+            [
+                "1b17d52213f805b1"
+            ]
+        ]
+    },
+    {
+        "id": "8860a122b20adc89",
+        "type": "CRM",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "CKK1_1/CKK1_2",
+        "typesid": "global",
+        "typeevt": "str",
+        "typest": "str",
+        "typesrc": "str",
+        "typeaddrid": "msg",
+        "typeaddrtype": "str",
+        "typebank": "str",
+        "typelang": "str",
+        "typeref": "msg",
+        "typemailto": "msg",
+        "typeextref": "msg",
+        "typeattrs": "msg",
+        "req": "param",
+        "sid": "sid",
+        "evt": "127389",
+        "st": "WT",
+        "src": "NRB",
+        "addrid": "item.client_id",
+        "addrtype": "CI",
+        "bank": "PB",
+        "lang": "UA",
+        "types": "create",
+        "typeId": "CI",
+        "params": [
+            {
+                "ATTR1": "item.ref",
+                "typekeyATTR1": "msg"
+            },
+            {
+                "extref": "item.client_id",
+                "typekeyextref": "msg"
+            }
+        ],
+        "ownparams": [],
+        "typesState": "create",
+        "object": {
+            "evt": "127389",
+            "st": "WT",
+            "src": "NRB",
+            "addrid": "item.client_id",
+            "addrtype": "CI",
+            "bank": "PB",
+            "lang": "UA",
+            "attrs": {
+                "ATTR1": "item.ref",
+                "typekeyATTR1": "msg"
+            },
+            "extref": "item.client_id"
+        },
+        "attrs": "",
+        "ref": "",
+        "attsadd": false,
+        "hist": false,
+        "arc": false,
+        "newparam": false,
+        "kibana": true,
+        "mainparams": {},
+        "mailto": "",
+        "x": 3270,
+        "y": 920,
+        "wires": [
+            [
+                "b7f5d3bcdacd9cd4",
+                "ec71420e67625318"
+            ]
+        ]
+    },
+    {
+        "id": "b7f5d3bcdacd9cd4",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.skkInfo = msg.payload;\n\nmsg.message = \"Щоденний моніторинг\";\n\nmsg.payload = `\n    UPDATE restructuring\n    set\n        message='${msg.message}',\n        evt='${msg.skkInfo.evt}',\n        call_ref = '${msg.skkInfo.ref}',\n        change_time = '${new Date().getTime()}'\n    where ref='${msg.item.ref}'\n`;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 3460,
+        "y": 920,
+        "wires": [
+            [
+                "336a3461093b98c1"
+            ]
+        ]
+    },
+    {
+        "id": "336a3461093b98c1",
+        "type": "link out",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "mode": "link",
+        "links": [
+            "3182cbc5b01e6a01"
+        ],
+        "x": 3555,
+        "y": 920,
+        "wires": []
+    },
+    {
+        "id": "e0105bf6170274de",
+        "type": "link out",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "mode": "link",
+        "links": [
+            "256aa149d0a48850"
+        ],
+        "x": 3335,
+        "y": 960,
+        "wires": []
+    },
+    {
+        "id": "256aa149d0a48850",
+        "type": "link in",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "links": [
+            "e0105bf6170274de"
+        ],
+        "x": 2785,
+        "y": 900,
+        "wires": [
+            [
+                "fda6372c79ad804a"
+            ]
+        ]
+    },
+    {
+        "id": "72977ea4fe621114",
+        "type": "CRM",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "CKK3",
+        "typesid": "global",
+        "typeevt": "str",
+        "typest": "str",
+        "typesrc": "str",
+        "typeaddrid": "msg",
+        "typeaddrtype": "str",
+        "typebank": "str",
+        "typelang": "str",
+        "typeref": "msg",
+        "typemailto": "msg",
+        "typeextref": "msg",
+        "typeattrs": "msg",
+        "req": "param",
+        "sid": "sid",
+        "evt": "127432",
+        "st": "WT",
+        "src": "NRB",
+        "addrid": "item.client_id",
+        "addrtype": "CI",
+        "bank": "PB",
+        "lang": "UA",
+        "types": "create",
+        "typeId": "CI",
+        "params": [
+            {
+                "ATTR1": "item.ref",
+                "typekeyATTR1": "msg"
+            },
+            {
+                "extref": "item.client_id",
+                "typekeyextref": "msg"
+            }
+        ],
+        "ownparams": [],
+        "typesState": "create",
+        "object": {
+            "evt": "127432",
+            "st": "WT",
+            "src": "NRB",
+            "addrid": "item.client_id",
+            "addrtype": "CI",
+            "bank": "PB",
+            "lang": "UA",
+            "attrs": {
+                "ATTR1": "item.ref",
+                "typekeyATTR1": "msg"
+            },
+            "extref": "item.client_id"
+        },
+        "attrs": "",
+        "ref": "",
+        "attsadd": false,
+        "hist": false,
+        "arc": false,
+        "newparam": false,
+        "kibana": true,
+        "mainparams": {},
+        "mailto": "",
+        "x": 1790,
+        "y": 880,
+        "wires": [
+            [
+                "024eb681c6a6a86b",
+                "99df6edcdcbc4f5a"
+            ]
+        ]
+    },
+    {
+        "id": "7a1e291de2b49de3",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1330,
+        "y": 840,
+        "wires": []
+    },
+    {
+        "id": "18fcf61fdac8dcb7",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2270,
+        "y": 800,
+        "wires": []
+    },
+    {
+        "id": "39a560728ec0df8b",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2190,
+        "y": 960,
+        "wires": []
+    },
+    {
+        "id": "f1a29cefe492b0ed",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 3070,
+        "y": 900,
+        "wires": []
+    },
+    {
+        "id": "ec71420e67625318",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 3450,
+        "y": 880,
+        "wires": []
+    },
+    {
+        "id": "5861444dd6bc5e66",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2950,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "678a3e26d6d39192",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2510,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "74dfee02cdd64229",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2510,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "8bcdd2d233a55b03",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2030,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "6e3c5144ef992a0c",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1250,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "67060a2ca8b602d7",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 950,
+        "y": 880,
+        "wires": []
+    },
+    {
+        "id": "e2b7463d7ee3d58c",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1330,
+        "y": 900,
+        "wires": []
+    },
+    {
+        "id": "e6eba18e95d96bad",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2810,
+        "y": 800,
+        "wires": []
+    },
+    {
+        "id": "7f5e0c4606a1b96c",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2410,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "284694ceb7bb1aef",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2930,
+        "y": 620,
+        "wires": []
+    },
+    {
+        "id": "4d376df18c49915d",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 3410,
+        "y": 960,
+        "wires": []
+    },
+    {
+        "id": "4ebe470b4a9c43a1",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2830,
+        "y": 980,
+        "wires": []
+    },
+    {
+        "id": "7827b6b4fef752ad",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2610,
+        "y": 1040,
+        "wires": []
+    },
+    {
+        "id": "8e2b2786373c242c",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2110,
+        "y": 900,
+        "wires": []
+    },
+    {
+        "id": "0c446f812992bc45",
+        "type": "pbhttp in",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "url": "/serchRestrById",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "checkRole": false,
+        "checkEsa": false,
+        "accessErrors": false,
+        "async": false,
+        "subsys": "",
+        "role": "",
+        "sid": "headers.sid",
+        "typesubsys": "str",
+        "typerole": "str",
+        "globalAccess": "access",
+        "globalAccessType": "global",
+        "logins-manually": false,
+        "logins-activate": false,
+        "esaConfig": "",
+        "authorizationMethod": "sid-validation",
+        "validateReq": false,
+        "params": [],
+        "manuallyLogins": [],
+        "x": 860,
+        "y": 160,
+        "wires": [
+            [
+                "ebb8df14ebae0bfc"
+            ]
+        ]
+    },
+    {
+        "id": "ebb8df14ebae0bfc",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.client_id = msg.payload.client_id;\n\nmsg.payload = `\n    SELECT * FROM restructuring\n    WHERE client_id='${msg.client_id}'\n`;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1040,
+        "y": 160,
+        "wires": [
+            [
+                "10ed9226fb859573"
+            ]
+        ]
+    },
+    {
+        "id": "a30a98a3329dc5ea",
+        "type": "pbhttp in",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "url": "/allRestrItems",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "checkRole": false,
+        "checkEsa": false,
+        "accessErrors": false,
+        "async": false,
+        "subsys": "",
+        "role": "",
+        "sid": "headers.sid",
+        "typesubsys": "str",
+        "typerole": "str",
+        "globalAccess": "",
+        "globalAccessType": "flow",
+        "logins-manually": false,
+        "logins-activate": false,
+        "esaConfig": "",
+        "authorizationMethod": "sid-validation",
+        "validateReq": false,
+        "params": [],
+        "manuallyLogins": [],
+        "x": 850,
+        "y": 200,
+        "wires": [
+            [
+                "b02f6ee6e5b73464"
+            ]
+        ]
+    },
+    {
+        "id": "b02f6ee6e5b73464",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.obj = msg.payload;\n\nif (msg.obj.type == \"counter\" && !msg.obj.status) {\n    if (!msg.obj.from || !msg.obj.to) {\n        let date = new Date();\n        msg.obj.to = date.getTime();\n        date.setDate(date.getDate() - 1);\n        msg.obj.from = date.getTime();\n    }\n    msg.payload = `select COUNT(*) from restructuring WHERE create_time > '${msg.obj.from}' AND create_time <= '${msg.obj.to}'`;\n} else if (msg.obj.status && !msg.obj.type) {\n    if (!msg.obj.from || !msg.obj.to) {\n        let date = new Date();\n        msg.obj.to = date.getTime();\n        date.setDate(date.getDate() - 1);\n        msg.obj.from = date.getTime();\n    }\n    msg.payload = `select * from restructuring WHERE create_time > '${msg.obj.from}' AND create_time <= '${msg.obj.to}' AND status='${msg.obj.status}'`;\n} else if (msg.obj.status && msg.obj.type) {\n    if (!msg.obj.from || !msg.obj.to) {\n        let date = new Date();\n        msg.obj.to = date.getTime();\n        date.setDate(date.getDate() - 1);\n        msg.obj.from = date.getTime();\n    }\n    msg.payload = `select COUNT(*) from restructuring WHERE create_time > '${msg.obj.from}' AND create_time <= '${msg.obj.to}' AND status='${msg.obj.status}'`;\n} else {\n    msg.payload = `\n        SELECT * FROM restructuring\n    `;\n}\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1040,
+        "y": 200,
+        "wires": [
+            [
+                "10ed9226fb859573"
+            ]
+        ]
+    },
+    {
+        "id": "3c85114891d99cc2",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "let length;\n\nif (msg.obj?.type == \"counter\") {\n    length = msg.payload.rows[0].count;\n    msg.payload = {\n        count: length\n    };\n} else {\n    length = msg.payload.rowCount;\n\n    msg.payload = {\n        rows: msg.payload.rows.map(function (item) {\n            item.create_time = moment(+item.create_time).format(\"YYYY-MM-DD hh:mm:ss\");\n            item.change_time = moment(+item.change_time).format(\"YYYY-MM-DD hh:mm:ss\");\n            return item;\n        }),\n        count: length\n    };\n}\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1340,
+        "y": 180,
+        "wires": [
+            [
+                "c1e173a380aff6a5"
+            ]
+        ]
+    },
+    {
+        "id": "c1e173a380aff6a5",
+        "type": "pbhttp out",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 1470,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "10ed9226fb859573",
+        "type": "postgrestor",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "restructuring",
+        "query": "{{{msg.payload}}}",
+        "postgresDB": "bacd51cd.6dea1",
+        "output": true,
+        "outputs": 1,
+        "errors": true,
+        "outField": "",
+        "x": 1190,
+        "y": 180,
+        "wires": [
+            [
+                "3c85114891d99cc2"
+            ]
+        ]
+    },
+    {
+        "id": "1171eeb71bc58a10",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "Удалить все старше 60 дней",
+        "func": "let date = new Date();\n\ndate.setDate(date.getDate() - 1);\n\nmsg.payload = `DELETE FROM restructuring WHERE create_time<'${date.getTime()}'`;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 270,
+        "y": 360,
+        "wires": [
+            [
+                "4f9817025a635965"
+            ]
+        ]
+    },
+    {
+        "id": "a1299dd6aef20b79",
+        "type": "inject",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "Первый вызов",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "1",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 95,
+        "y": 360,
+        "wires": [
+            [
+                "1171eeb71bc58a10"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "64ed7f04d77cdc09",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "if (global.get(\"NODE_ENV\") != \"development\") return msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2520,
+        "y": 840,
+        "wires": [
+            [
+                "f27d0fa4c6f36e47"
+            ]
+        ]
+    },
+    {
+        "id": "36f32c4ec65c08a1",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.url = `https://start.privatbank.ua/DesktopGUI/quarantineRestruct/${msg.payload.ref}.cors`;\n\nmsg.payload = {\n    \"state\": \"C\"\n};\n\nmsg.headers = {\n    \"Content-type\": \"application/json\",\n    \"Authorization\": global.get(\"NODE_ENV\") == \"development\" ? \"220627csa1jqc2co5ypb\" : global.get(\"sid\")\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2220,
+        "y": 1520,
+        "wires": [
+            [
+                "97bca97cc4a0459e",
+                "3b8748d29f155f76"
+            ]
+        ]
+    },
+    {
+        "id": "97bca97cc4a0459e",
+        "type": "pb-http-request",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "/quarantineRestruct",
+        "method": "PUT",
+        "ret": "obj",
+        "paytoqs": false,
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "throwNot200": false,
+        "proxy": "",
+        "authType": "",
+        "headers": "{{headers}}",
+        "payload": "{{payload}}",
+        "timeout": "",
+        "customTimeout": false,
+        "x": 2390,
+        "y": 1520,
+        "wires": [
+            [
+                "dc65334a72a108d1",
+                "68b58d62540e4bb1"
+            ]
+        ]
+    },
+    {
+        "id": "dc65334a72a108d1",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2550,
+        "y": 1520,
+        "wires": []
+    },
+    {
+        "id": "52b7070c0d1a8212",
+        "type": "inject",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"ref\":\"SAMDNWFC00075624918\"}",
+        "payloadType": "json",
+        "x": 2020,
+        "y": 1520,
+        "wires": [
+            [
+                "36f32c4ec65c08a1"
+            ]
+        ]
+    },
+    {
+        "id": "20a1c8a8bfe353f3",
+        "type": "comment",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "Тест для П24 и Ляшко Алексея",
+        "info": "",
+        "x": 2150,
+        "y": 1400,
+        "wires": []
+    },
+    {
+        "id": "5f90c0d2d957f864",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "Запрос \\n рабочий стол",
+        "func": "msg.url = `https://start.privatbank.ua/DesktopGUI/quarantineRestruct.cors?clid=${msg.payload.client_id}`; //21532320\n\nmsg.headers = {\n    \"Content-type\": \"application/json\",\n    \"Authorization\": global.get(\"NODE_ENV\") == \"development\" ? \"220628csa1k7qekn9wsb\" : global.get(\"sid\")\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2240,
+        "y": 1460,
+        "wires": [
+            [
+                "9f1122a212c52d4f",
+                "134bdf4f50a07d77"
+            ]
+        ]
+    },
+    {
+        "id": "9f1122a212c52d4f",
+        "type": "pb-http-request",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "/quarantineRestruct.cors",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": false,
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "throwNot200": false,
+        "proxy": "",
+        "authType": "",
+        "headers": "{{headers}}",
+        "payload": "{{payload}}",
+        "timeout": "",
+        "customTimeout": false,
+        "x": 2450,
+        "y": 1460,
+        "wires": [
+            [
+                "6960a739c0e853c0",
+                "68b58d62540e4bb1"
+            ]
+        ]
+    },
+    {
+        "id": "1fa58af65be1d90f",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "Проверка результата",
+        "func": "context.global.checkRes(msg, \"quarantineRestruct 2\", node);\n\ntry {\n    msg.payload = JSON.parse(msg.payload);\n} catch (e) { }\n\nif (msg.statusCode == 200) {\n    msg.startRes = msg.payload.result;\n    msg.repeatCounter = 0;\n    return [msg, null];\n} else {\n    context.global.error(msg, `Ошибка поиска на раб столе 2`, node);\n    msg.repeatCounter = msg.repeatCounter ? msg.repeatCounter : 0;\n    if (msg.repeatCounter < 6) {\n        return [null, msg];\n    } \n    msg.message = \"Помилка перевірки довідника 2. Перевищено кількість спроб. Продовжено моніторинг\"\n    throw new Error(\"Превышено кол-во запросов к справочнику 2\");\n}",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2840,
+        "y": 1380,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "08a40852ede3ae51",
+        "type": "inject",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"client_id\":\"1000282800\"}",
+        "payloadType": "json",
+        "x": 2020,
+        "y": 1460,
+        "wires": [
+            [
+                "5f90c0d2d957f864"
+            ]
+        ]
+    },
+    {
+        "id": "6960a739c0e853c0",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2630,
+        "y": 1460,
+        "wires": []
+    },
+    {
+        "id": "134bdf4f50a07d77",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2390,
+        "y": 1400,
+        "wires": []
+    },
+    {
+        "id": "b7f5f850dbc34812",
+        "type": "pbhttp in",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "url": "/testLyashko1",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "checkRole": false,
+        "checkEsa": false,
+        "accessErrors": false,
+        "async": false,
+        "subsys": "",
+        "role": "",
+        "sid": "headers.sid",
+        "typesubsys": "str",
+        "typerole": "str",
+        "globalAccess": "access",
+        "globalAccessType": "global",
+        "logins-manually": false,
+        "logins-activate": false,
+        "esaConfig": "",
+        "authorizationMethod": "sid-validation",
+        "validateReq": false,
+        "params": [],
+        "manuallyLogins": [],
+        "x": 2030,
+        "y": 1420,
+        "wires": [
+            [
+                "5f90c0d2d957f864"
+            ]
+        ]
+    },
+    {
+        "id": "68b58d62540e4bb1",
+        "type": "pbhttp out",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 2630,
+        "y": 1400,
+        "wires": []
+    },
+    {
+        "id": "c3dfed136d43436a",
+        "type": "pbhttp in",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "url": "/testLyashko2",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "checkRole": false,
+        "checkEsa": false,
+        "accessErrors": false,
+        "async": false,
+        "subsys": "",
+        "role": "",
+        "sid": "headers.sid",
+        "typesubsys": "str",
+        "typerole": "str",
+        "globalAccess": "access",
+        "globalAccessType": "global",
+        "logins-manually": false,
+        "logins-activate": false,
+        "esaConfig": "",
+        "authorizationMethod": "sid-validation",
+        "validateReq": false,
+        "params": [],
+        "manuallyLogins": [],
+        "x": 2030,
+        "y": 1560,
+        "wires": [
+            [
+                "36f32c4ec65c08a1"
+            ]
+        ]
+    },
+    {
+        "id": "3b8748d29f155f76",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2350,
+        "y": 1560,
+        "wires": []
+    },
+    {
+        "id": "124818e9d4459532",
+        "type": "inject",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "21532320",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"client_id\":\"21532320\"}",
+        "payloadType": "json",
+        "x": 2000,
+        "y": 1480,
+        "wires": [
+            [
+                "5f90c0d2d957f864"
+            ]
+        ]
+    },
+    {
+        "id": "67749752acf53c73",
+        "type": "inject",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 160,
+        "y": 1580,
+        "wires": [
+            [
+                "f19f22535a1afcbe"
+            ]
+        ]
+    },
+    {
+        "id": "f19f22535a1afcbe",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.payload = {\n    client_id: \"21532320\",\n    ref: \"SAMDNWFC00059383643\"\n};\n\nmsg.url = \"https://0-745-0.app.nr.it.loc/softCollectionRestr\";\n\nmsg.headers = {\n    sid: \"220627csa1n37xfk12mv\"\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 320,
+        "y": 1580,
+        "wires": [
+            [
+                "f6d388f2cd5cd738"
+            ]
+        ]
+    },
+    {
+        "id": "f6d388f2cd5cd738",
+        "type": "pb-http-request",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": false,
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "throwNot200": false,
+        "proxy": "",
+        "authType": "",
+        "headers": "{{headers}}",
+        "payload": "{{payload}}",
+        "timeout": "",
+        "customTimeout": false,
+        "x": 460,
+        "y": 1580,
+        "wires": [
+            [
+                "31e03a9296ba087c"
+            ]
+        ]
+    },
+    {
+        "id": "31e03a9296ba087c",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 590,
+        "y": 1580,
+        "wires": []
+    },
+    {
+        "id": "f61ba51495899222",
+        "type": "inject",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 160,
+        "y": 1640,
+        "wires": [
+            [
+                "552ee1e70de06b8b"
+            ]
+        ]
+    },
+    {
+        "id": "552ee1e70de06b8b",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.payload = {\n    sqlStr: `DELETE from restructuring WHERE ref='SAMDNWFC00059383643'`\n};\n\nmsg.url = \"https://0-745-0.app.nr.it.loc/updateReglamentBase\";\n\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 320,
+        "y": 1640,
+        "wires": [
+            [
+                "0a8d9a1a3f458a6d"
+            ]
+        ]
+    },
+    {
+        "id": "0a8d9a1a3f458a6d",
+        "type": "pb-http-request",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": false,
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "throwNot200": false,
+        "proxy": "",
+        "authType": "",
+        "headers": "{{headers}}",
+        "payload": "{{payload}}",
+        "timeout": "",
+        "customTimeout": false,
+        "x": 460,
+        "y": 1640,
+        "wires": [
+            [
+                "d79510686e4c95d2"
+            ]
+        ]
+    },
+    {
+        "id": "d79510686e4c95d2",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 590,
+        "y": 1640,
+        "wires": []
+    },
+    {
+        "id": "1dc2d523a1e8a4f6",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.url = `https://start.privatbank.ua/DesktopGUI/quarantineRestruct/${msg.payload.ref}.cors`;\n\nmsg.payload = {\n    \"state\": \"X\"\n};\n\nmsg.headers = {\n    \"Content-type\": \"application/json\",\n    \"Authorization\": global.get(\"NODE_ENV\") == \"development\" ? \"220627csa1n37xfk12mv\" : global.get(\"sid\")\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2160,
+        "y": 1740,
+        "wires": [
+            [
+                "9398aebc079cd225",
+                "d1e0340743c2548c"
+            ]
+        ]
+    },
+    {
+        "id": "9398aebc079cd225",
+        "type": "pb-http-request",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "/quarantineRestruct",
+        "method": "PUT",
+        "ret": "obj",
+        "paytoqs": false,
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "throwNot200": false,
+        "proxy": "",
+        "authType": "",
+        "headers": "{{headers}}",
+        "payload": "{{payload}}",
+        "timeout": "",
+        "customTimeout": false,
+        "x": 2330,
+        "y": 1740,
+        "wires": [
+            [
+                "230319563d695bd3"
+            ]
+        ]
+    },
+    {
+        "id": "230319563d695bd3",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2490,
+        "y": 1740,
+        "wires": []
+    },
+    {
+        "id": "7be1e3aee078d9e4",
+        "type": "inject",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"ref\":\"SAMDNWFC00059383643\"}",
+        "payloadType": "json",
+        "x": 2020,
+        "y": 1740,
+        "wires": [
+            [
+                "1dc2d523a1e8a4f6"
+            ]
+        ]
+    },
+    {
+        "id": "d1e0340743c2548c",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2290,
+        "y": 1780,
+        "wires": []
+    },
+    {
+        "id": "e85393de7163d751",
+        "type": "pb-http-request",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "/solutionRestrCollectionAndNSK",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": false,
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "throwNot200": false,
+        "proxy": "",
+        "authType": "",
+        "headers": "{{headers}}",
+        "payload": "{{payload}}",
+        "timeout": "",
+        "customTimeout": false,
+        "x": 1370,
+        "y": 1260,
+        "wires": [
+            [
+                "26b02fce6e76a11c"
+            ]
+        ]
+    },
+    {
+        "id": "4f3a1a2a06beb948",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.url = `https://inform-sup.pb.ua/solutionRestrCollectionAndNSK/run`;\n\nmsg.payload = {\n    \"clientId\": \"10709243\",\n    \"ref\": \"SAMDNWFC00036680509\"\n};\n\nmsg.headers = {\n    \"Content-type\": \"application/json\",\n    \"Authorization\": global.get(\"NODE_ENV\") == \"development\" ? \"220629csa1jofyxm5niy\" : global.get(\"sid\"),\n    \"sid\": global.get(\"NODE_ENV\") == \"development\" ? \"220629csa1jofyxm5niy\" : global.get(\"sid\")\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1160,
+        "y": 1260,
+        "wires": [
+            [
+                "e85393de7163d751"
+            ]
+        ]
+    },
+    {
+        "id": "26b02fce6e76a11c",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1570,
+        "y": 1260,
+        "wires": []
+    },
+    {
+        "id": "099a6ca43dc6fd34",
+        "type": "inject",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 1000,
+        "y": 1260,
+        "wires": [
+            [
+                "4f3a1a2a06beb948"
+            ]
+        ]
+    },
+    {
+        "id": "212060ec014ddddc",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.url = `https://start.privatbank.ua/DesktopGUI/quarantineRestruct/${msg.payload.ref}.cors`;\n\nmsg.payload = {\n    \"state\": \"Y\"\n};\n\nmsg.headers = {\n    \"Content-type\": \"application/json\",\n    \"Authorization\": global.get(\"NODE_ENV\") == \"development\" ? \"220628csa1g7tm897prz\" : global.get(\"sid\")\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2160,
+        "y": 1880,
+        "wires": [
+            [
+                "cf685555aa7edd11",
+                "f2eca2696fe35b93"
+            ]
+        ]
+    },
+    {
+        "id": "cf685555aa7edd11",
+        "type": "pb-http-request",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "/quarantineRestruct",
+        "method": "PUT",
+        "ret": "obj",
+        "paytoqs": false,
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "throwNot200": false,
+        "proxy": "",
+        "authType": "",
+        "headers": "{{headers}}",
+        "payload": "{{payload}}",
+        "timeout": "",
+        "customTimeout": false,
+        "x": 2330,
+        "y": 1880,
+        "wires": [
+            [
+                "094d71dcd7e0f0d1"
+            ]
+        ]
+    },
+    {
+        "id": "094d71dcd7e0f0d1",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2490,
+        "y": 1880,
+        "wires": []
+    },
+    {
+        "id": "84aeb12fbaa57e7f",
+        "type": "inject",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"ref\":\"SAMDNWFC00059383643\"}",
+        "payloadType": "json",
+        "x": 2020,
+        "y": 1880,
+        "wires": [
+            [
+                "212060ec014ddddc"
+            ]
+        ]
+    },
+    {
+        "id": "f2eca2696fe35b93",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2290,
+        "y": 1920,
+        "wires": []
+    },
+    {
+        "id": "6d5fb963505ba338",
+        "type": "inject",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 160,
+        "y": 1700,
+        "wires": [
+            [
+                "65229ce0fb75a5b5"
+            ]
+        ]
+    },
+    {
+        "id": "65229ce0fb75a5b5",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.payload = {\n    sqlStr: `UPDATE restructuring\n                set\n                    message='Щоденний моніторинг',\n                    status='NEW'\n                where ref='SAMDNWFC00059383643'`\n};\n\nmsg.url = \"https://0-745-0.app.nr.it.loc/updateReglamentBase\";\n\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 320,
+        "y": 1700,
+        "wires": [
+            [
+                "4b4c771949e188d1"
+            ]
+        ]
+    },
+    {
+        "id": "4b4c771949e188d1",
+        "type": "pb-http-request",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": false,
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "throwNot200": false,
+        "proxy": "",
+        "authType": "",
+        "headers": "{{headers}}",
+        "payload": "{{payload}}",
+        "timeout": "",
+        "customTimeout": false,
+        "x": 460,
+        "y": 1700,
+        "wires": [
+            [
+                "744e17c1053bb8a8"
+            ]
+        ]
+    },
+    {
+        "id": "744e17c1053bb8a8",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 590,
+        "y": 1700,
+        "wires": []
+    },
+    {
+        "id": "99df6edcdcbc4f5a",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1810,
+        "y": 940,
+        "wires": []
+    },
+    {
+        "id": "6c5045ae69ef42ca",
+        "type": "pbhttp in",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "url": "/testLyashko",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "checkRole": false,
+        "checkEsa": false,
+        "accessErrors": false,
+        "async": true,
+        "subsys": "",
+        "role": "",
+        "sid": "headers.sid",
+        "typesubsys": "str",
+        "typerole": "str",
+        "globalAccess": "access",
+        "globalAccessType": "global",
+        "logins-manually": false,
+        "logins-activate": false,
+        "esaConfig": "",
+        "authorizationMethod": "sid-validation",
+        "validateReq": false,
+        "params": [],
+        "manuallyLogins": [],
+        "x": 140,
+        "y": 920,
+        "wires": [
+            [
+                "f4bbd874448df748"
+            ]
+        ]
+    },
+    {
+        "id": "3c7c2d0e17e6357f",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2730,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "e9db24295377069a",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "msg.url = `https://start.privatbank.ua/DesktopGUI/quarantineRestruct/${msg.payload.ref}.cors`;\n\nmsg.payload = {\n    \"state\": \"C\"\n};\n\nmsg.headers = {\n    \"Content-type\": \"application/json\",\n    \"Authorization\": global.get(\"NODE_ENV\") == \"development\" ? \"220629csa1ou77w5bpai\" : global.get(\"sid\")\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2160,
+        "y": 2040,
+        "wires": [
+            [
+                "8b717c791be77a3e"
+            ]
+        ]
+    },
+    {
+        "id": "8b717c791be77a3e",
+        "type": "pb-http-request",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "/quarantineRestruct",
+        "method": "PUT",
+        "ret": "obj",
+        "paytoqs": false,
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "throwNot200": false,
+        "proxy": "",
+        "authType": "",
+        "headers": "{{headers}}",
+        "payload": "{{payload}}",
+        "timeout": "",
+        "customTimeout": false,
+        "x": 2370,
+        "y": 2040,
+        "wires": [
+            [
+                "e3fc1186e7034cf1"
+            ]
+        ]
+    },
+    {
+        "id": "e3fc1186e7034cf1",
+        "type": "debug",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2530,
+        "y": 2040,
+        "wires": []
+    },
+    {
+        "id": "3966743dc6fd162f",
+        "type": "inject",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"ref\":\"SAMDNWFC00059383643\"}",
+        "payloadType": "json",
+        "x": 1800,
+        "y": 2040,
+        "wires": [
+            [
+                "97c1eb48494298d7"
+            ]
+        ]
+    },
+    {
+        "id": "97c1eb48494298d7",
+        "type": "function",
+        "z": "ab1d59a9d4c4b31a",
+        "name": "",
+        "func": "let arr = [\n    \"SAMDNWFC00066430384\"\n];\n\narr.forEach(function (item) {\n    node.send({\n        payload: {\n            ref: item\n        }\n    });\n});",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1960,
+        "y": 2040,
+        "wires": [
+            [
+                "e9db24295377069a"
+            ]
+        ]
+    },
+    {
+        "id": "bacd51cd.6dea1",
+        "type": "postgresDB",
+        "name": "[[PG_USER]]@[[PG_HOST]]:[[PG_PORT]]/[[PG_DB]]",
+        "host": "[[PG_HOST]]",
+        "hostFieldType": "str",
+        "port": "[[PG_PORT]]",
+        "portFieldType": "num",
+        "database": "[[PG_DB]]",
+        "databaseFieldType": "str",
+        "ssl": "false",
+        "sslFieldType": "bool",
+        "max": "10",
+        "maxFieldType": "num",
+        "min": 1,
+        "minFieldType": "num",
+        "idle": "1000",
+        "idleFieldType": "num",
+        "user": "[[PG_USER]]",
+        "userFieldType": "str",
+        "password": "[[PG_PASS]]",
+        "passwordFieldType": "str"
+    }
+]
